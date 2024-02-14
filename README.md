@@ -184,9 +184,35 @@ from stupidly obvious to powerful
     ```
     you can of course add an alias back into `Expression.LetIn` but just linking to it seems enough.
 
-    TODO mention wrapping using record field instead of variant
+    Another technique I'll just mention briefly is wrapping data into a record instead of variant
+    ```elm
+    type alias Wrapper =
+        { wrapper : UnwrappedData }
+    ```
+    This way, you can define the type in multiple modules to break the cycle. As a bonus, you'll get an easy way to deconstruct using `.wrapper`
 
-    TODO mention "duplicating internal API to the outside"
+    Yet another technique is "duplicating internal API to the outside".
+    This can mean 1:1 copy or a "user-facing view" of some aspect.
+    ```elm
+    -- module A exposing (A(..), doSomething)
+    type A
+        = X X
+        | Y Y
+    aToInternal : A -> A.Internal.A
+    aFromInternal : A.Internal.A -> A
+
+    doSomething : A -> A
+    doSomething = \a ->
+        a |> aToInternal |> A.Internal.doSomething |> aFromInternal
+    ```
+    ```elm
+    -- module A.Internal exposing (A(..), doSomething)
+    type A
+        = X X
+        | Y Y
+    doSomething : A -> A
+    ```
+    I've written it this abstractly because this is as boilerplate-y as it looks and I've yet to see a package where earlier techniques didn't work. Maybe yours?
 
   - Do you use opaque types to allow adding configuration in a future version without it counting as a major version bump?
     I feel your pain. I also dream for the day where adding variants as input or fields as output only requires a minor version bump.
