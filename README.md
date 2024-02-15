@@ -143,9 +143,31 @@ from stupidly obvious to powerful
   - Did you hide the variants because your `type` has phantom type parameters?
     → ["phantom types - but what are the alternatives?"](https://dark.elm.dmy.fr/packages/lue-bird/elm-review-phantom-type/latest#but-what-are-the-alternatives-)
 
-  - Did you hide the variants because you want to internally preserve certain properties that a user could bypass? Try modeling it using choice `type`s
+  - Did you hide the variants because you want to internally preserve certain properties that a user could bypass? Try modeling it using choice `type`s, like instead of
+    ```elm
+    -- module WebGL.Texture exposing (Magnify(..))
+    type Magnify
+        = MagnifyById Int
     
-    TODO
+    linear : Magnify
+    linear = 9727
+    nearest : Magnify
+    nearest = 9728
+    ```
+    why not
+    ```elm
+    -- module WebGL.Texture exposing (Magnify(..))
+    type Magnify
+        = Linear
+        | Nearest
+    
+    magnifyToId : Magnify -> Int
+    magnifyToId = \magnify ->
+        case magnify of
+            Linear -> 9727
+            Nearest -> 9728
+    ```
+    This will likely work in more places than you think, even for e.g. allowed letters in an email.
 
   - Do you hide the variants because if you moved the `type` into the exposed modules there would be import cycles?
     ```elm
@@ -266,7 +288,7 @@ Mostly for packages:
 ## not convinced?
 
 I'm super interested in what you're brewing!
-Do you use them to get better performance, cash some data or because there doesn't seem to be another way to ensure certain properties (like sorting in a `Dict`)?
+Do you use them to get better performance, to cash some data or because there doesn't seem to be another way to ensure certain properties (like sorting in a `Dict`)?
 If you want to, text me @lue on slack as these are problems I like finding nicer fixes for.
 
 ## thanks
