@@ -6,10 +6,10 @@
 reports types that are exposed without their variants.
 
 If you want to learn more about opaque types first:
-  - [article "Use opaque types in Elm!" by Héctor Ramón](https://dev.to/hecrj/use-opaque-types-in-elm-3oal)
-  - [design guideline "Keep tags and record constructors secret" by Evan Czaplicki](https://package.elm-lang.org/help/design-guidelines#keep-tags-and-record-constructors-secret)
-  - any [elm radio](https://elm-radio.com/) episode
-  - [article "Types of Types in Elm" by Mike Knepper](https://8thlight.com/insights/types-of-types-in-elm)
+  - [🕮 article "Use opaque types in Elm!" by Héctor Ramón](https://dev.to/hecrj/use-opaque-types-in-elm-3oal)
+  - [🗎 design guideline "Keep tags and record constructors secret" by Evan Czaplicki](https://package.elm-lang.org/help/design-guidelines#keep-tags-and-record-constructors-secret)
+  - 🎙 any [elm radio](https://elm-radio.com/) episode
+  - [🕮 article "Types of Types in Elm" by Mike Knepper](https://8thlight.com/insights/types-of-types-in-elm)
 
 ```elm
 import Review.Rule
