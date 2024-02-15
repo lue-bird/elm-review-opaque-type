@@ -266,8 +266,8 @@ Mostly for packages:
 ## not convinced?
 
 I'm super interested in what you're brewing!
-It's not like I haven't used opaque types for [experimental packages](https://dark.elm.dmy.fr/packages/lue-bird/elm-keysset/latest/) as well.
-If you want to, text me @lue on slack.
+Do you use them to get better performance, cash some data or because there doesn't seem to be another way to ensure certain properties (like sorting in a `Dict`)?
+If you want to, text me @lue on slack as these are problems I like finding nicer fixes for.
 
 ## thanks
 - [miniBill for elm-fast-dict](https://dark.elm.dmy.fr/packages/miniBill/elm-fast-dict/latest)
