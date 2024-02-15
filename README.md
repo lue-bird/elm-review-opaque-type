@@ -138,7 +138,7 @@ from stupidly obvious to powerful
     As an added benefit you allow pattern matching.
 
     If you take away one thing from this package,
-    it's to use descriptive wrapper types with just one variant often, even if you don't plan on hiding that variant. That alone will prevent most accidents.
+    it's to use descriptive wrapper types with just one variant often, even if you don't plan on hiding that variant. That alone will prevent most accidents and make things more clear.
   
   - Did you hide the variants because your `type` has phantom type parameters?
     → ["phantom types - but what are the alternatives?"](https://dark.elm.dmy.fr/packages/lue-bird/elm-review-phantom-type/latest#but-what-are-the-alternatives-)
@@ -184,12 +184,51 @@ from stupidly obvious to powerful
     ```
     you can of course add an alias back into `Expression.LetIn` but just linking to it seems enough.
 
-    Another technique I'll just mention briefly is wrapping data into a record instead of variant
+    Here's another approach for module structures like
     ```elm
-    type alias Wrapper =
-        { wrapper : UnwrappedData }
+    -- module Decimal exposing (Decimal, round)
+    import Integer.Internal exposing (Integer)
+
+    type alias Decimal = Decimal.Internal.Decimal
+    round : Decimal -> Integer
     ```
-    This way, you can define the type in multiple modules to break the cycle. As a bonus, you'll get an easy way to deconstruct using `.wrapper`
+    ```elm
+    -- module Integer exposing (Integer, divideBy)
+    import Decimal.Internal exposing (Decimal)
+
+    type alias Integer = Integer.Internal.Integer
+    divideBy : Integer -> (Integer -> Decimal)
+    ```
+    ```elm
+    -- module Integer.Internal exposing (Integer(..))
+    type Integer = Integer ...
+    ```
+    ```elm
+    -- module Decimal.Internal exposing (Decimal(..))
+    type Decimal = Decimal ...
+    ```
+    I would strongly suggest re-organizing the modules so that for example `Decimal` gets all the functions that return a `Decimal` (here some form of the `divideBy` function)
+    but if this is not viable or pretty, here's a trick:
+    Wrapping the data into a record instead of variant
+    ```elm
+    -- module Decimal exposing (Decimal, round)
+    import Integer.Internal exposing (Integer)
+    type alias Decimal = { decimal : ... }
+    type alias Integer = { integer : ... }
+    round : Decimal -> Integer
+    ```
+    ```elm
+    -- module Integer exposing (Integer, divideBy)
+    import Decimal.Internal exposing (Decimal)
+    type alias Decimal = { decimal : ... }
+    type alias Integer = { integer : ... }
+    divideBy : Integer -> (Integer -> Decimal)
+    ```
+    This way, you can define the type in multiple modules to break the cycle. As a bonus, you'll get an easy way to deconstruct using `.integer` & `.decimal`.
+    Make sure to keep these definitions in sync. Maybe even write tests like
+    ```elm
+    ... |> Integer.divideBy ... |> Decimal.round
+    ```
 
     Yet another technique is "duplicating internal API to the outside".
     This can mean 1:1 copy or a "user-facing view" of some aspect.
@@ -214,6 +253,8 @@ from stupidly obvious to powerful
     ```
     I've written it this abstractly because this is as boilerplate-y as it looks and I've yet to see a package where earlier techniques didn't work. Maybe yours?
 
+Mostly for packages:
+
   - Do you use opaque types to allow adding configuration in a future version without it counting as a major version bump?
     I feel your pain. I also dream for the day where adding variants as input or fields as output only requires a minor version bump.
     I don't think cases like this will be super frequent, though, so clearly telling your users your new version won't break their code is pretty good already.
@@ -221,8 +262,6 @@ from stupidly obvious to powerful
   - Did you hide the variants because you want to be able to change details about the type (not what it represents but how it's stored) in the future without forcing a major version bump?
     I find cases like that to be really rare in practice, with type definitions only changing with a change of context. I think the best you can do is telling users that the upgrading to the version
     won't mean any breaking changes if they didn't access the safe internals.
-
-Are you up for the challenge to try and design your API without opaque types?
 
 ## not convinced?
 
