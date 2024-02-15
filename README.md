@@ -44,7 +44,7 @@ Claim: "opaque types give you neither convenience, confidence, nor the rewards".
     why not take this free gift from storing the parsed data,
     even if you don't need it right now?
     
-    When using opaque types, you still have to validate broad values. I know you have this regex around that "should work". The code will barely grow in complexity if you make it ["parse, not validate"](https://elm-radio.com/episode/parse-dont-validate/) instead, if at all.
+    When using opaque types, you still have to validate broad values. I know you have this regex around that "should work". The code will barely grow in complexity if you make it parse instead, if at all.
 
     And once you've tightly defined the type, your job is done forever since there's no way to construct invalid values, even internally. If it makes sense, maybe publish it and let everyone profit
 
