@@ -11,9 +11,9 @@ when inside the directory containing this file.
 
 -}
 
+import NoMissingTypeExpose
 import Review.OpaqueType
 import Review.Rule exposing (Rule)
-import NoMissingTypeExpose
 
 
 config : List Rule
