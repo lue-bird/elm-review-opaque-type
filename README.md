@@ -150,9 +150,9 @@ from stupidly obvious to powerful
         = MagnifyById Int
     
     linear : Magnify
-    linear = 9727
+    linear = MagnifyById 9727
     nearest : Magnify
-    nearest = 9728
+    nearest = MagnifyById 9728
     ```
     why not
     ```elm
