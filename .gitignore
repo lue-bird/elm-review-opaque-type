@@ -3,6 +3,7 @@ elm-stuff/
 zombie/
 Gen
 docs.json
+package-lock.json
 
 # Editors
 .idea/
