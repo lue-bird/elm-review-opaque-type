@@ -21,6 +21,7 @@ module Review.OpaqueType exposing (forbid)
 
 -}
 
+import Dict
 import Elm.Module
 import Elm.Project
 import Elm.Syntax.Declaration exposing (Declaration)
@@ -33,12 +34,15 @@ import Elm.Syntax.TypeAnnotation
 import FastDict exposing (Dict)
 import Review.Fix
 import Review.ModuleNameLookupTable exposing (ModuleNameLookupTable)
+import Review.Project.Dependency
 import Review.Rule exposing (Rule)
 import Set exposing (Set)
 
 
 type alias ProjectContext =
-    { exposedModules : ExposedModules }
+    { exposedModules : ExposedModules
+    , dependencyModules : Set Elm.Syntax.ModuleName.ModuleName
+    }
 
 
 {-|
@@ -56,6 +60,7 @@ type alias ModuleContext =
     { moduleNameLookup : ModuleNameLookupTable
     , typesExposedWithoutVariants : Dict String Range
     , exposedModules : ExposedModules
+    , dependencyModules : Set Elm.Syntax.ModuleName.ModuleName
     }
 
 
@@ -102,6 +107,23 @@ forbid =
                                 }
                 )
             )
+        |> Review.Rule.withDependenciesProjectVisitor
+            (\dependencies context ->
+                ( []
+                , { context
+                    | dependencyModules =
+                        dependencies
+                            |> Dict.values
+                            |> List.concatMap
+                                (\dependency ->
+                                    dependency
+                                        |> Review.Project.Dependency.modules
+                                        |> List.map (\depModule -> depModule.name |> String.split ".")
+                                )
+                            |> Set.fromList
+                  }
+                )
+            )
         |> Review.Rule.withModuleVisitor
             (\moduleRuleSchema ->
                 moduleRuleSchema
@@ -128,6 +150,7 @@ forbid =
 initialProjectContext : ProjectContext
 initialProjectContext =
     { exposedModules = AllModulesExposed -- dummy
+    , dependencyModules = Set.empty
     }
 
 
@@ -138,6 +161,7 @@ projectToModuleContextCreator =
             { moduleNameLookup = moduleNameLookup
             , typesExposedWithoutVariants = FastDict.empty
             , exposedModules = projectContext.exposedModules
+            , dependencyModules = projectContext.dependencyModules
             }
         )
         |> Review.Rule.withModuleNameLookupTable
@@ -145,14 +169,18 @@ projectToModuleContextCreator =
 
 projectContextsMerge : ProjectContext -> ProjectContext -> ProjectContext
 projectContextsMerge _ previous =
-    { exposedModules = previous.exposedModules }
+    { exposedModules = previous.exposedModules
+    , dependencyModules = previous.dependencyModules
+    }
 
 
 moduleToProjectContextCreator : Review.Rule.ContextCreator ModuleContext ProjectContext
 moduleToProjectContextCreator =
     Review.Rule.initContextCreator
         (\moduleContext ->
-            { exposedModules = moduleContext.exposedModules }
+            { exposedModules = moduleContext.exposedModules
+            , dependencyModules = moduleContext.dependencyModules
+            }
         )
 
 
@@ -172,30 +200,28 @@ declarationVisitor declaration context =
 
                         -- defined in separate module
                         Just (moduleNamePart0 :: moduleNamePart1Up) ->
-                            let
-                                isFromExposedModule : Bool
-                                isFromExposedModule =
-                                    case context.exposedModules of
-                                        AllModulesExposed ->
-                                            True
+                            case context.exposedModules of
+                                AllModulesExposed ->
+                                    []
 
-                                        SomeModulesExposed exposedModuleSet ->
-                                            exposedModuleSet |> Set.member (moduleNamePart0 :: moduleNamePart1Up)
-                            in
-                            if isFromExposedModule then
-                                []
+                                SomeModulesExposed exposedModuleSet ->
+                                    if
+                                        (exposedModuleSet |> Set.member (moduleNamePart0 :: moduleNamePart1Up))
+                                            || (context.dependencyModules |> Set.member (moduleNamePart0 :: moduleNamePart1Up))
+                                    then
+                                        []
 
-                            else
-                                [ Review.Rule.error
-                                    { message = "full type definition not exposed"
-                                    , details =
-                                        [ """Only the package knows how this type is defined. This way, it's hidden from the users how to construct values of this type (through variants etc.)."""
-                                        , """These "opaque" types don't give you the usual rewards of type-safety and allow a bit more room for mistakes."""
-                                        , """I suggest looking at these alternatives: https://dark.elm.dmy.fr/packages/lue-bird/elm-review-opaque-type/latest#but-what-are-the-alternatives"""
+                                    else
+                                        [ Review.Rule.error
+                                            { message = "full type definition not exposed"
+                                            , details =
+                                                [ """Only the package knows how this type is defined. This way, it's hidden from the users how to construct values of this type (through variants etc.)."""
+                                                , """These "opaque" types don't give you the usual rewards of type-safety and allow a bit more room for mistakes."""
+                                                , """I suggest looking at these alternatives: https://dark.elm.dmy.fr/packages/lue-bird/elm-review-opaque-type/latest#but-what-are-the-alternatives"""
+                                                ]
+                                            }
+                                            nameRange
                                         ]
-                                    }
-                                    nameRange
-                                ]
 
                 _ ->
                     []

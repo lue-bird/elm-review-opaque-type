@@ -23,6 +23,17 @@ type A
                         Review.OpaqueType.forbid
                     |> Review.Test.expectNoErrors
             )
+        , Test.test "does not report when the type alias uses types from dependencies"
+            (\() ->
+                """module A exposing (A)
+
+type alias A =
+    Sub Int
+"""
+                    |> Review.Test.run
+                        Review.OpaqueType.forbid
+                    |> Review.Test.expectNoErrors
+            )
         , Test.test "reports direct opaque type"
             (\() ->
                 """module A exposing (OpaqueType)
